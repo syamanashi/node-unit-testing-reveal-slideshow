@@ -1,0 +1,1133 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Bulletproofing your applications with unit testing.</title>
+		<meta name="description" content="Bulletproofing your applications with unit testing.">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					Bulletproofing your applications with unit testing
+					<img src="assets/Testing_bulletproof_vest_1923.jpg">
+				</section>
+				<section>
+					<h3>Confessions of a JavaScript Hitman</h3>
+					<img src="assets/KaoSoi-thailand.jpg" width="460"><br>
+					<p>I'm not a node guru (yet)</p>
+					<p><i>...and only I first learned JavaScript test-driven development to do this presentation! 
+							(shhh... don't tell my next boss!)</i></p>
+				</section>
+				<section>
+					<h4>What we're going to cover this evening:</h4>
+					<p>We're going to introduce ourselves to:</p>
+					<ul>
+						<li>The test-first cycle</li>
+						<li>Unit testing in node</li>
+						<li>TDD: Test-driven development</li>
+						<li>BDD: Behavior-driven development</li>
+						<li>mocha</li>
+						<li>chai</li>
+						<li>istanbul</li>
+						<li>sinon (maybe)</li>
+						<li>rewire (maybe)</li>
+						<li>Async testing (doubtful, but with the mention)</li>
+					</ul>
+				</section>
+				<section>
+					<h4>What we will not cover</h4>
+					<ul>
+						<li>Alternative libraries to the ones mentioned (this ain't no shootout, Bubb!)</li>
+						<li>Best practices for production code (this is a down and dirty intro)</li>
+					</ul>
+				</section>
+				<!-- <section>
+					<h4>Who will benefit</h4>
+					<ul>
+						<li>Aspiring node developer (code samples VERY elementary)</li>
+						<li></li>
+						<li></li>
+					</ul>
+				</section> -->
+				<section>
+					<h4>The test-first cycle</h4>
+					<img src="assets/test-first-cycle.png" width="600">
+					<small><i>Source: Learning Behavior-driven Development with JavaScript By Enrique Amodeo (Packt) (2015)</i></small>
+				</section>
+				<section>
+					<h4>Test-first Cycle: key points</h4>
+					<ol>
+						<li>You should not write new code if there is no good reason to do so.</li>
+						<li>Use failing tests as a guide to know whether there is need for new code or .</li>
+						<li>We should start writing the most simple test thst will fail.</li>
+						<li>Simplest often starts with expecting the correct answer.</li>
+						<li>Run the test and watch it fail.</li>
+						<li>Make the test pass by writing the simplest production code possible.</li>
+						<li>Clean the code (refactor) if necessary after the tests pass.</li>
+					</ol>
+					<p>Rule: <i>You should only write code to fix a failing test or to write a new failing test.</i></p>
+				</section>
+				<section>
+					<h2>Repeat!</h2>
+					<p><i>...until there is no new failing test to write.</i></p>
+				</section>
+				<section>
+					<h4>Five rules of test-first approach</h4>
+					<ol>
+						<li>Don't write any new tests if there is not a new coding task.</li>
+						<li>A new test must always fail.</li>
+						<li>A new test should be as simple as possible.</li>
+						<li>Write only the minimum necessary code to fix a failing test, and don't bother with quality during this activity.</li>
+						<li>Only clean code when your tests pass.</li>
+					</ol>
+				</section>
+				<section>
+					<h4>Results of test-first cycle</h4>
+					<ul>
+						<li>Testable Code</li>
+						<li>Minimum Code</li>
+						<li>Easier to refactor (since you'll know if you broke anything immediately)</li>
+						<li>Cleaner Code (cleaning frequently)</li>
+						<li>Adding features is less scary since you have regression tests ready to go</li>
+					</ul>
+				</section>
+				<section>
+					<h4>Test-first Drawback</h4>
+					<p>You cannot adopt a test-first approach easily in a project that is in the middle of development and started without the test-first approach.</p>
+					<p><i>Code written without a test-first approach is often hard to test.</i></p>
+				</section>
+				<section>
+					<h4>TDD vs BDD</h4>
+					<p><small><i>Disclaimer: this is my interpretation only...</i></small></p>
+					<p>TDD (Test-driven development) is applying the test-first cycle to classes or components.</p>
+					<br>
+					<p>BDD (Behavior-driven development) is an extension of TDD. However, the language used and tests created focus on software features (or bugs) instead of class or component expectations. </p>
+					<br>
+					<p>BDD tests test features or bugs, not components or classes.</p>
+				</section>
+				<section>
+					<h4>BDD</h4>
+					<ol>
+						<li>Dan North coined the term BDD (Behavior-driven development).</li>
+						<li>In BDD jargon, tests are often referred to as specifications (or features).</li>
+						<li>Don't write new code if there is not a change in the product.</li>
+						<li>A change in the product always represents a feature or a bug.</li>
+						<li>So, our tests should test the feature or the bug.</li>
+						<li>Test reports should be understandable for the stakeholders (feature based).</li>
+					</ol>
+				</section>
+				<section>
+					<h4>BDD vs TDD in real world</h4>
+
+					<h1> ¯\_(ツ)_/¯</h1>
+					
+					<p>We're not going to be strictly adhering to BDD today, but we will use the BDD syntax.</p>
+					<br>
+					<p>Note: when a single component represents a single feature (one-to-one) in very small systems, there is probably no point in trying to be strictly BDD.</p>
+				</section>
+				<section>
+					<h4>Unit Testing</h4>
+					<br>
+					<p><u><b>Unit</b></u>: a feature or a component.</p>
+					<br>
+					<p><u><b>Feature</b></u>: a single concreate action that the user can perform on the system.  <br>Often a use case or user story will map to several features.</p>
+					<br>
+					<p><u><b>Component</b></u>: any software artifact, such as classes, procedures, or functions that we use to build the system.<br>Often a feature will span across multiple components.</p>
+				</section>
+				<section>
+					<h4>Structure of a test</h4>
+					<ol>
+						<li><b><u>Set up</u>:</b> Set up the test in a well-known state (data, input params) which allows our test to be repeatable.<br><br></li>
+						<li><b><u>Act</u>:</b> Perform the operation we are testing (ideally, involving a single action).<br><br></li>
+						<li><b><u>Assert</u>:</b> Check the return value of the operation and side effects (from other units, for example).</li>
+					</ol>
+				</section>
+
+				<section>
+					<h4>Mocha</h4>
+					<ul>
+						<li>Homepage: mochajs.org</li>
+						<li>Mocha is a JavaScript test runner and Testing Framework</li>
+						<li>The most popular test runner in JavaScript</li>
+						<li><a href="https://mochajs.org/#interfaces">Mocha BDD Interface: https://mochajs.org/#interfaces </a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h4>Chai</h4>
+					<ul>
+						<li>Homepage: chaijs.com</li>
+						<li>Assertion Engine (gives us a way to check values in our unit tests)</li>
+						<li>Some call Chai: An expectation library</li>
+						<li><a href="http://chaijs.com/guide/styles/">Assertion Styles</a></li>
+						<li><a href="http://chaijs.com/api/bdd/">BDD API</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h4>Installation</h4>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mkdir bddcalc
+$ cd bddcalc
+$ npm init --yes
+$ sudo npm install -g mocha
+$ npm install --save-dev mocha chai
+
+$ cat package.json
+</code></pre>
+				</section>
+
+				<section>
+					<h4>Run Mocha!</h4>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+</code></pre>
+				</section>
+
+				<section data-transition="slide" data-background="#b5533c" data-background-transition="zoom">
+					<h4>Run Mocha!</h4>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+</code></pre>
+					Oh noes!
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+/usr/local/lib/node_modules/mocha/lib/utils.js:634
+        throw new Error("cannot resolve path (or pattern) '" + path + "'");
+        ^
+
+Error: cannot resolve path (or pattern) 'test'
+    at Object.lookupFiles (/usr/local/lib/node_modules/mocha/lib/utils.js:634:15)
+    at /usr/local/lib/node_modules/mocha/bin/_mocha:327:30
+    at Array.forEach (native)
+    at Object.<anonymous> (/usr/local/lib/node_modules/mocha/bin/_mocha:326:6)
+    at Module._compile (module.js:541:32)
+    at Object.Module._extensions..js (module.js:550:10)
+    at Module.load (module.js:458:32)
+    at tryModuleLoad (module.js:417:12)
+    at Function.Module._load (module.js:409:3)
+    at Function.Module.runMain (module.js:575:10)
+    at startup (node.js:160:18)
+    at node.js:449:3
+</code></pre>
+				</section>
+
+				<section>
+					<h4>Create your first test</h4>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mkdir test && touch test/calc-spec.js
+$ subl .
+</code></pre>
+
+
+<br><br>
+Then edit the new test file: calc-spec.js
+					<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+describe('Hello, Mocha', function() {
+	it('should fail a test', function() {
+		assert(false, 'true');
+	});
+});
+					</code></pre>
+				</section>
+
+				<section>
+					<h4>Run Mocha</h4>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+Hello, Mocha
+    1) should fail a test
+
+
+  0 passing (9ms)
+  1 failing
+
+  1) Hello, Mocha should fail a test:
+
+      AssertionError: true
+      + expected - actual
+
+      -false
+      +true
+
+      at Context.<anonymous> (test/calc-spec.js:5:5)
+
+</code></pre>
+					<br>
+					<br>
+					<p>Congrats!  We've failed our first test!</p>
+				</section>
+
+
+				<section>
+					<h4>Let's make it pass</h4>
+					<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+describe('Hello, Mocha', function() {
+	it('should *NOT* fail a test', function() {
+		assert(true, 'true');
+	});
+});
+					</code></pre>
+					<p>Run mocha</p>
+					<pre><code class="hljs" data-trim contenteditable>
+$ mocha
+					</code></pre>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+Hello, Mocha
+    ✓ should NOT fail a test
+
+
+  1 passing (6ms)
+
+</code></pre>
+				</section>
+
+
+				<section>
+					<h4>Mocha test suites</h4>
+					<ul>
+						<li>Test suites are created by nesting our tests inside of describe() statements.</li>
+						<li>These describe statements can be further nested.</li>
+						<!-- <li>Let's create our first test suite with a pending test:</li> -->
+					</ul>
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+describe('CALCULATOR', function() {
+
+  describe('Add', function() {
+
+    it('should add two numbers and return the total');
+
+  });
+
+});
+</code></pre>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      - should add two numbers and return the total
+
+
+  0 passing (4ms)
+  1 pending
+</code></pre>
+
+				</section>
+
+				<section>
+					<h4>Run the test and watch it fail</h4>
+
+
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+describe('CALCULATOR', function() {
+
+  describe('Add', function() {
+
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      assert.equal(result, 4, 'did not return 4');
+    });
+
+  });
+
+});
+</code></pre>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      1) should add two numbers and return the total
+
+
+  0 passing (7ms)
+  1 failing
+
+  1) CALCULATOR Add should add two numbers and return the total:
+     ReferenceError: calc is not defined
+      at Context.<anonymous> (test/calc-spec.js:8:20)
+</code></pre>
+
+				</section>
+
+
+
+
+				<section>
+					<h4>Begin writing your production code</h4>
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+var calc = {
+  add: function (num1, num2) {
+  }  
+};
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      assert.equal(result, 4, 'did not return 4');
+    });
+  });
+});
+</code></pre>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      1) should add two numbers and return the total
+
+
+  0 passing (8ms)
+  1 failing
+
+  1) CALCULATOR Add should add two numbers and return the total:
+     AssertionError: did not return 4
+      at Context.<anonymous> (test/calc-spec.js:12:14)
+</code></pre>
+
+				</section>
+
+
+
+
+				<section>
+					<h4>Make the test pass by writing the simplest production code possible</h4>
+
+
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+
+var calc = {
+  add: function (num1, num2) {
+    return num1 + num2;
+  }  
+};
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      assert.equal(result, 4, 'did not return 4');
+    });
+  });
+});
+</code></pre>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+
+
+  1 passing (6ms)
+</code></pre>
+
+				</section>
+
+
+
+
+				<section>
+					<h4>Clean the code</h4>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mkdir lib && touch lib/calc.js
+</code></pre>
+calc.js:
+<pre><code class="hljs" data-trim contenteditable>
+var calc = {
+  add: function (num1, num2) {
+    return num1 + num2;
+  }  
+};
+
+module.exports = calc;
+</code></pre>
+
+
+calc-spec.js:
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('assert');
+var calc = require('../lib/calc');
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      assert.equal(result, 4, 'did not return 4');
+    });
+  });
+});
+</code></pre>
+
+				</section>
+
+
+				<section>
+					<h4>Test again</h4>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+
+
+  1 passing (6ms)
+</code></pre>
+
+				</section>
+
+				<section>
+					<h4>Repeat!</h4>
+				</section>
+
+				<section>
+					<h4>Let's talk about Chai</h4>
+<p>Node's core assert module can only take us so far.  Let's incorporate Chai.  For starters, Chai share's an assert module that will run all of the core assert modules:</p>
+
+
+<pre><code class="hljs" data-trim contenteditable>
+var assert = require('chai').assert;
+var calc = require('../lib/calc');
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      assert.equal(result, 4, 'did not return 4');
+    });
+  });
+});
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+
+
+  1 passing (6ms)
+</code></pre>
+
+
+				</section>
+
+
+
+				<section>
+					<h4>Chai also has more powerful 'expect' and 'should' assertion engines</h4>
+					<p>These allow us to more easily formulate the verbiage of our tests to read like the description of a feature test.</p>
+
+
+<pre><code class="hljs" data-trim contenteditable>
+var chai = require('chai'),
+    expect = chai.expect,
+    should = chai.should();
+
+var calc = require('../lib/calc');
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      result.should.equal(4);
+    });
+  });
+});
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+
+
+  1 passing (6ms)
+</code></pre>
+
+				</section>
+
+
+
+				<section>
+					<h4>Choice between 'expect' and 'should' is generally a personal choice</h4>
+					<small>Outside of the scope of this lesson, there are some nuanced differences which result in expect() to be a more consistent approach across assertion cases.</small>
+
+
+<pre><code class="hljs" data-trim contenteditable>
+var chai = require('chai'),
+    expect = chai.expect,
+    should = chai.should();
+
+var calc = require('../lib/calc');
+
+describe('CALCULATOR', function() {
+  describe('Add', function() {
+    it('should add two numbers and return the total', function() {
+      var result = calc.add(2, 2);
+      expect(result).to.equal(4);
+    });
+  });
+});
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+
+
+  1 passing (6ms)
+</code></pre>
+
+				</section>
+
+
+
+
+				<section>
+					<h4>Add another test</h4>
+					<small>Watch it fail</small>
+
+
+<small>calc-spec.js (partial):</small>
+<pre><code class="hljs" data-trim contenteditable>
+it('should throw an error if either value is not a number', function() {
+  var handler = function() {
+    calc.add('hey', 'now');
+  };
+  expect(handler).to.throw(Error);
+});
+</code></pre>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+      1) should throw an error if either value is not a number
+
+
+  1 passing (11ms)
+  1 failing
+
+  1) CALCULATOR Add should throw an error if either value is not a number:
+     AssertionError: expected [Function] to throw Error
+      at Context.<anonymous> (test/calc-spec.js:19:31)
+</code></pre>
+
+				</section>
+
+
+
+				<section>
+					<h4>What's next?</h4>
+
+
+<small>calc.js:</small>
+<pre><code class="hljs" data-trim contenteditable>
+var calc = {
+  add: function (num1, num2) {
+    if (typeof num1 !== 'number' || typeof num2 !== 'number') {
+      throw new Error('Invalid number');
+    }
+    return num1 + num2;
+  }  
+};
+module.exports = calc;
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+      ✓ should throw an error if either value is not a number
+
+  2 passing (7ms)
+</code></pre>
+
+				</section>
+
+
+				<section>
+					<h4>Improve the test</h4>
+
+
+
+<small>calc-spec.js (partial):</small>
+<pre><code class="hljs" data-trim contenteditable>
+it('should throw an error if either value is not a number', function() {
+  var handler = function() {
+    calc.add('hey', 'now');
+  };
+  expect(handler).to.throw(Error);
+  expect(handler).to.throw('Invalid number'); // add this line
+});
+</code></pre>
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+      ✓ should throw an error if either value is not a number
+
+  2 passing (7ms)
+</code></pre>
+
+
+				</section>
+
+
+				<section>
+					<h4>mocha --watch flag</h4>
+					<p>Rather than continuously going back to our console and running $ mocha, set the --watch flag so that mocha runs with any code change (on your test or SUT - system under test)</p>
+
+
+
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ mocha -w
+
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+      ✓ should throw an error if either value is not a number
+
+  2 passing (7ms)
+</code></pre>
+
+<small>If your production files are outside of the current working directory or your test files are not in the test directory, you can tell mocha where those files are after the -w flag.</small>
+				</section>
+
+
+
+				<section>
+					<h4>Creating specs for subtract</h4>
+<pre><code class="hljs" data-trim contenteditable>
+describe('Subtract', function() {
+  it('should subtract the second number from the first and return the result', function() {
+    var result = calc.subtract(2, 2);
+    expect(result).to.equal(0);
+  });
+  it('should throw an error if either value is not a number', function() {
+    var handler = function() {
+      calc.subtract('hey', 'now');
+    };
+    expect(handler).to.throw(Error);
+    expect(handler).to.throw('Invalid number');
+  });
+});
+</code></pre>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+CALCULATOR
+    Add
+      ✓ should add two numbers and return the total
+      ✓ should throw an error if either value is not a number
+    Subtract
+      1) should subtract the second number from the first and return the result
+      2) should throw an error if either value is not a number
+
+
+  2 passing (3ms)
+  2 failing
+</code></pre>
+				</section>
+
+
+				<section>
+					<h4>Coding to make the Subtract tests pass (and improve code some)</h4>
+<pre><code class="hljs" data-trim contenteditable>
+var calc = {
+  
+  checknum: function (num1, num2) {
+    if (typeof num1 !== 'number' || typeof num2 !== 'number') {
+      throw new Error('Invalid number');
+    }
+  },
+
+  subtract: function(num1, num2) {
+    this.checknum(num1, num2);
+    return num1 - num2;
+  }
+</code></pre>
+				</section>
+
+
+
+
+
+				<section>
+					<h4>Going off the rails</h4>
+					<small>Let's add a function to our production calc without a test first <br>(yes, I know... Blaspheme! But, bare with me...)</small>
+<pre><code class="hljs" data-trim contenteditable>
+avg: function(nums) {
+  if(!Array.isArray(nums)) {
+    callback(new Error('Invalid array'));
+    return;
+  }
+  var sum = 0;
+  for (var i = 0; i < nums.length; i++) {
+    sum += parseInt( nums[i], 10 );
+  }
+  console.log(`avgSync() invoked: sum is ${sum}, count is ${nums.length}`);
+  return sum/nums.length;
+}
+</code></pre>
+
+				</section>
+
+
+				<section>
+					<h4>istanbul</h4>
+					<p>Istanbul gives us "coverage" reports that let us know stats and specifics about how much of our code is covered by our tests.</p>
+					<br>
+					<p>Homepage: <a href="http://gotwarlost.github.io/istanbul/">http://gotwarlost.github.io/istanbul/</a></p>
+				</section>
+
+
+
+				<section>
+					<h4>istanbul</h4>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ sudo npm install -g istanbul
+$ istanbul cover _mocha
+</code></pre>
+					
+					<img src="assets/istanbul01.png" alt="">
+					<img src="assets/istanbul02.png" alt="">
+				</section>
+
+
+				<section>
+					<h4>Coverage report tells us we are missing some tests!</h4>
+<small>(After we review the coverage report...) Let's code the missing tests:</small>
+
+<pre><code class="hljs" data-trim contenteditable>
+describe('avg', function() {
+  it('should throw an error if the value passed is not an array of numbers', function() {
+    var handler = function() {
+      calc.avg('hey');
+    };
+    expect(handler).to.throw(Error);
+    expect(handler).to.throw('Invalid array');
+  });
+  it('should average an array of numbers', function() {
+    var result = calc.avg([3, 4, 5, 6, 7]);
+    expect(result).to.equal(5);
+  });
+});
+</code></pre>
+				</section>
+
+
+
+				<section>
+					<h4>Now, re-run istanbul</h4>
+<pre><code class="hljs" data-trim contenteditable style="background-color:#000000">
+$ istanbul cover _mocha
+</code></pre>
+					<img src="assets/istanbul03.png" alt="">
+					<img src="assets/istanbul04.png" alt="">
+				</section>
+
+
+
+
+
+
+
+				<section>
+				<h4>Sinon</h4>
+				<ul>
+					<li>Homepage: http://sinonjs.org</li>
+					<li>Spy and Stub (and mocking) library for JavaScript</li>
+					<li>These tools help us in set up and isolate our unit tests by impersonating third party systems or components.</li>
+					<li>We can use spies in the assertion phase of the test and stubs in the set up phase.</li>
+					<li>We may have time to explore spies and stubs briefly.</li>
+					<li><a href="http://sinonjs.org/">http://sinonjs.org/</a></li>
+					<li><a href="http://sinonjs.org/docs/">Docs</a></li>
+				</ul>
+				</section>
+
+
+
+
+				<section>
+					<h4>Sinon Spy</h4>
+					<ul>
+						<li>A sinon spy is a function that records arguments, return value, the value of this and exception thrown (if any) for all its calls.</li>
+						<li>A sinon spy can be an anonymous function or it can wrap an existing function.</li>
+						<li>We can use Sinon Spies in place of real functions and they allow us to determine if the real function would have been invoked as we expect.</li>
+					</ul>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ npm install --save-dev sinon
+</code></pre>
+				</section>
+
+				<section>
+					<h4>rewire</h4>
+					<ul>
+						<li><a href="https://www.npmjs.com/package/rewire">https://www.npmjs.com/package/rewire</a></li>
+						<li>With rewire, we can inject test variable data into our System Under Test (SUT) that can override other data or variables</li>
+						<li>Because we can inject variables, rewire allows us to replace real data with test data for unit tests</li>
+					</ul>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ npm install --save-dev rewire
+</code></pre>
+
+				</section>
+
+
+
+				<section>
+					<h4>Sinon Spy / Rewire Example</h4>
+					<small>We can also combine sinon spies with rewire to overwrite object methods with spies</small>
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ npm install --save-dev sinon rewire
+</code></pre>
+
+<pre><code class="hljs" data-trim contenteditable >
+var sinon = require('sinon');
+var rewire = require('rewire');
+
+var calc = rewire('../lib/calc'); // require
+
+
+describe('CALCULATOR', function() {
+  
+  beforeEach(function(){
+    this.console = {
+      log: sinon.spy()
+    };
+    calc.__set__('console', this.console);
+  });
+</code></pre>
+<pre><code class="hljs" data-trim contenteditable >
+  it('should average an array of numbers', function() {
+    var result = calc.avg([3, 4, 5, 6, 7]);
+    expect(result).to.equal(5);
+    expect(this.console.log.callCount).to.equal(1); // add this line
+  });
+</code></pre>
+				</section>
+
+
+
+				<section>
+					<h4>Async Tests</h4>
+					<small>If time, let's fumble through an example....</small>
+<br><small>calc-spec.js:</small>
+<pre><code class="hljs" data-trim contenteditable >
+describe.only('avgAsync', function() { // note the 'only' inclusive selector
+  it('should average of an array asynchronously', function() {
+    calc.avgAsync([3,4,5,6,7], function(error, result) {
+      result.should.equal(555);
+    });
+  });
+});
+</code></pre>
+<small>calc.js:</small>
+<pre><code class="hljs" data-trim contenteditable >
+avgAsync: function(nums, callback) {
+  setTimeout(function() {
+    var sum = 0;
+    for (var i = 0; i < nums.length; i++) {
+      sum += parseInt( nums[i], 10 );
+    }
+    callback(null, sum/nums.length);
+  }, 1000);
+}
+</code></pre>
+				</section>
+
+
+
+				<section data-transition="slide" data-background="#b5533c" data-background-transition="zoom">
+					<h4>Async Test: run mocha</h4>
+					Oh noes!  This should not pass!!!
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+
+CALCULATOR
+    avgAsync
+      ✓ should return an average of an array of numbers asynchronously
+
+  1 passing (8ms)
+</code></pre>
+<pre><code class="hljs" data-trim contenteditable >
+describe.only('avgAsync', function() { // note the 'only' inclusive selector
+  it('should average of an array asynchronously', function() {
+    calc.avgAsync([3,4,5,6,7], function(error, result) {
+      result.should.equal(555);
+    });
+  });
+});
+</code></pre>
+				</section>
+
+				<section>
+					<h4>Async callback test solution: passing in done()</h4>
+<pre><code class="hljs" data-trim contenteditable >
+describe.only('avgAsync', function() {
+  it('should return avg', function(done) { // done gets passed in
+    calc.avgAsync([3,4,5,6,7], function(error, result) {
+      result.should.equal(555);
+      done();
+      // done gets called, letting mocha know
+      // that we're ready for the assertion
+    });
+  });
+});
+</code></pre>
+YES!  It failed :)
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+CALCULATOR
+    avgAsync
+      1) should return an average of an array of numbers asynchronously
+
+
+  0 passing (1s)
+  1 failing
+</code></pre>
+				</section>
+
+				<section>
+					<h4>Async callback test solution: Make the test pass:</h4>
+<pre><code class="hljs" data-trim contenteditable >
+describe.only('avgAsync', function() {
+  it('should return avg', function(done) { // done gets passed in
+    calc.avgAsync([3,4,5,6,7], function(error, result) {
+      result.should.equal(5);
+      done();
+      // done gets called, letting mocha know
+      // that we're ready for the assertion
+    });
+  });
+});
+</code></pre>
+YES!  It passed as expected.
+<pre><code class="hljs" data-trim contenteditable  style="background-color:#000000">
+$ mocha
+CALCULATOR
+    avgAsync
+      ✓ should return an average of an array of numbers asynchronously (1001ms)
+
+
+  1 passing (1s)
+</code></pre>
+				</section>
+
+
+
+
+				<section>
+					<h4>What we reviewed<small><br><br>We barely scratched the surface.</small></h4>
+
+					<ul>
+						<li>The test-first cycle</li>
+						<li>Unit testing in node</li>
+						<li>TDD: Test-driven development</li>
+						<li>BDD: Behavior-driven development</li>
+						<li>mocha</li>
+						<li>chai</li>
+						<li>istanbul</li>
+						<li>sinon</li>
+						<li>rewire</li>
+					</ul>
+					
+				</section>
+
+				<section>
+					<h4>Take away</h4>
+					Test-first!  It's fun.  I'm a believer.
+				</section>
+
+				<section>
+					<h4>about me</h4>
+					<img src="assets/sutton02.png" alt="" width="200">
+					<br>
+					Sutton Yamanashi
+					<br>
+					LinkIn: <a href="https://www.linkedin.com/in/suttonyamanashi">https://www.linkedin.com/in/suttonyamanashi</a>
+
+			</section>
+
+
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
